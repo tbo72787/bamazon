@@ -1,6 +1,9 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
-var validate = true;
+var idNum = 0;
+var quantity = 0;
+var newQuantity = 0;
+var moneySpent = 0;
 
 var connection = mysql.createConnection({
   host: "localhost",
@@ -61,13 +64,16 @@ function bamazonBuy() {
     }
   ])
   .then(function(product) {
-    connection.query("SELECT * FROM products", function (err, result, fields) {
+    connection.query("SELECT * FROM products", function (err, result) {
       if (err) throw err;
 
       for(var i = 0; i < result.length; i++) {
 
-        var idNum = parseInt(product.idNum);
-        var quantity = parseInt(product.quantity);
+        idNum = parseInt(product.idNum);
+        quantity = parseInt(product.quantity);
+        newQuantity = result[i].stock_quantity - quantity;
+        moneySpent = quantity * result[i].price;
+
         if(idNum === result[i].item_id) {
           console.log("Checking quantity...");
           if(quantity <= result[i].stock_quantity) {
@@ -79,10 +85,6 @@ function bamazonBuy() {
             return bamazonBuy();
           }
         }
-      // else {
-      //   console.log("Sorry, but that ID doesn't exist. Try again.");
-      //   bamazonBuy();
-      // }
       }
       console.log("Sorry, but that ID doesn't exist. Try again.")
       bamazonBuy();
@@ -91,5 +93,26 @@ function bamazonBuy() {
 }
 
 function stockDrop() {
-
-}
+  connection.query(
+    "UPDATE products SET ? WHERE ?",
+    [
+      {
+        stock_quantity: newQuantity
+      },
+      {
+        item_id: idNum
+      }
+    ],
+    function(err, res) {
+      if (err) throw err;
+      console.log("You spent $" + moneySpent);
+    }
+  )
+  connection.query(
+    "SELECT * FROM products WHERE ?",
+    {item_id : idNum},
+    function (err, result) {
+      if (err) throw err;
+      console.log("There are " + result[0].stock_quantity + " of this item left in stock. Have a great day!")
+      connection.end();
+})}
