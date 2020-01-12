@@ -1,5 +1,6 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
+var validate = true;
 
 var connection = mysql.createConnection({
   host: "localhost",
@@ -59,18 +60,36 @@ function bamazonBuy() {
       message: "Please enter the quantity of items you would like to purchase"
     }
   ])
-  .then(function(user) {
-    connection.query("SELECT item_id FROM products", function (err, result, fields) {
+  .then(function(product) {
+    connection.query("SELECT * FROM products", function (err, result, fields) {
       if (err) throw err;
-      console.log(result[0].item_id);
 
       for(var i = 0; i < result.length; i++) {
-        var idNum = parseInt(user.idNum);
+
+        var idNum = parseInt(product.idNum);
+        var quantity = parseInt(product.quantity);
         if(idNum === result[i].item_id) {
-          console.log("yes");
+          console.log("Checking quantity...");
+          if(quantity <= result[i].stock_quantity) {
+            console.log("Thank you for your purchase!");
+            return stockDrop();
+          }
+          else {
+            console.log("Sorry, we don't have enough. Try again.");
+            return bamazonBuy();
+          }
         }
+      // else {
+      //   console.log("Sorry, but that ID doesn't exist. Try again.");
+      //   bamazonBuy();
+      // }
       }
+      console.log("Sorry, but that ID doesn't exist. Try again.")
+      bamazonBuy();
     })
     })
-    
+}
+
+function stockDrop() {
+
 }
