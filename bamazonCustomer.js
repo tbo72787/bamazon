@@ -1,4 +1,5 @@
 var mysql = require("mysql");
+var inquirer = require("inquirer");
 
 var connection = mysql.createConnection({
   host: "localhost",
@@ -38,6 +39,38 @@ function readProducts() {
       console.log("Quantity: " + stock_quantity);
     }
     console.log("--------------------");
-    connection.end();
+    // connection.end();
+    bamazonBuy();
   });
+}
+
+function bamazonBuy() {
+  inquirer.prompt([
+
+    {
+      type: "input",
+      name: "idNum",
+      message: "Please enter the ID number of the item you wish to purchase"
+    },
+
+    {
+      type: "input",
+      name: "quantity",
+      message: "Please enter the quantity of items you would like to purchase"
+    }
+  ])
+  .then(function(user) {
+    connection.query("SELECT item_id FROM products", function (err, result, fields) {
+      if (err) throw err;
+      console.log(result[0].item_id);
+
+      for(var i = 0; i < result.length; i++) {
+        var idNum = parseInt(user.idNum);
+        if(idNum === result[i].item_id) {
+          console.log("yes");
+        }
+      }
+    })
+    })
+    
 }
